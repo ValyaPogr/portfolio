@@ -1,0 +1,64 @@
+@startuml
+title Расхождение данных при маршрутизации B2B-запроса
+
+skinparam componentStyle rectangle
+skinparam shadowing false
+
+actor "B2B-клиент" as Client
+
+rectangle "Система-инициатор" as SystemA {
+    component "API" as API
+    database "БД" as DB
+}
+
+component "Компонент\nмаршрутизации" as Router
+
+rectangle "Backend-системы" as Backend {
+    component "Backend 1\nМакрорегион A" as F1
+    component "Backend 2\nМакрорегион B" as F2
+    component "Backend N\n..." as FN
+}
+
+Client --> API : B2B-запрос
+
+API --> Router : Запрос
+
+Router --> F1 : Маршрутизация\nМакрорегион A
+Router --> F2 : Маршрутизация\nМакрорегион B
+Router --> FN : Маршрутизация\n...
+
+F1 --> Router : Ответ
+F2 --> Router : Ответ
+FN --> Router : Ответ
+
+Router --> API : Ответ
+
+DB --> API : Макрорегион B
+
+API --> Client : Сгруппированный ответ
+
+note right of Router
+  Источник №1
+  Определённый макрорегион:
+  Макрорегион A
+end note
+
+note right of DB
+  Источник №2
+  Макрорегион в БД:
+  Макрорегион B
+end note
+
+note bottom
+  ⚠ РАСХОЖДЕНИЕ ДАННЫХ
+
+  Компонент маршрутизации:
+  Макрорегион A
+
+  База данных системы-инициатора:
+  Макрорегион B
+
+  → Некорректная группировка ответа
+end note
+
+@enduml
